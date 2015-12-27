@@ -1,0 +1,8 @@
+world creation:
+  fill a bunch of areas using the shape of a circle using a floating point number from 0 to 1. then average out every tile in the world using a nearest neighbor calculation. after a few averaging passes any circles that were close enough together should merge, creating bridges between land masses. assign land tiles based on the final value of land.
+
+  0.4 - 1: normal land
+  0.2 - 0.4: beach
+  0.0 - 0.2: water
+
+once land is in place then add mountain ranges, rivers, etc.

@@ -9,28 +9,23 @@ import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 
 public class Main extends ApplicationAdapter {
-	/*
 	SpriteBatch batch;
-	Texture img;
-	*/
+	Texture forest;
 
 	@Override
 	public void create () {
-		/*
 		batch = new SpriteBatch();
-		img = new Texture("badlogic.jpg");
-		*/
+		forest = new Texture("data/land/forest.png");
 	}
 
 	@Override
 	public void render () {
-		/*
 		Gdx.gl.glClearColor(1, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		batch.begin();
-		batch.draw(img, 0, 0);
+		batch.draw(forest, 0, 0);
+		batch.draw(forest, 0, 100);
 		batch.end();
-		*/
 	}
 
 	public static class DesktopLauncher {
@@ -39,4 +34,20 @@ public class Main extends ApplicationAdapter {
 			new LwjglApplication(new Main(), config);
 		}
 	}
+}
+
+class World{
+	public World(){
+	}
+
+	private Tile[][] tiles;
+}
+
+enum TileType{
+	Forest,
+	Beach,
+	Ocean
+}
+
+class Tile{
 }
