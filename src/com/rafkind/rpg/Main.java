@@ -33,7 +33,7 @@ public class Main extends ApplicationAdapter {
 		*/
 	}
 
-	static class DesktopLauncher {
+	public static class DesktopLauncher {
 		public static void main(String... args) {
 			LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 			new LwjglApplication(new Main(), config);
