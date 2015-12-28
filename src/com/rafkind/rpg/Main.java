@@ -2,6 +2,7 @@ package com.rafkind.rpg;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Circle;
@@ -13,7 +14,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 
-public class Main extends ApplicationAdapter {
+public class Main extends ApplicationAdapter implements InputProcessor {
 	SpriteBatch batch;
 	World world;
 
@@ -23,7 +24,54 @@ public class Main extends ApplicationAdapter {
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
-		world = World.generate(200, 200);
+		world = World.generate(300, 300);
+
+		Gdx.input.setInputProcessor(this);
+	}
+
+	@Override
+	public boolean keyDown(int keycode){
+		return false;
+	}
+
+	@Override
+	public boolean keyUp(int keycode){
+		return false;
+	}
+	
+	@Override
+	public boolean keyTyped(char c){
+		return false;
+	}
+
+	@Override
+	public boolean touchDragged(int screenX, int screenY, int pointer){
+		return false;
+	}
+
+	@Override
+	public boolean touchUp(int screenX, int screenY, int pointer, int button){
+		return false;
+	}
+	
+	@Override
+	public boolean touchDown(int screenX, int screenY, int pointer, int button){
+		return false;
+	}
+
+	@Override
+	public boolean mouseMoved(int screenX, int screenY){
+		return false;
+	}
+
+	@Override
+	public boolean scrolled(int amount){
+		if (amount < 0){
+			world.increaseZoom();
+		} else {
+			world.decreaseZoom();
+		}
+		return true;
 	}
 
 	@Override
@@ -59,12 +107,25 @@ class World{
 	private Texture beach;
 	private Tile[][] tiles;
 
+	private double zoom = 0.1;
+
+	public void increaseZoom(){
+		zoom += 0.02;
+	}
+
+	public void decreaseZoom(){
+		zoom -= 0.02;
+		if (zoom < 0.01){
+			zoom = 0.01;
+		}
+	}
+
 	public void render(SpriteBatch batch){
 		int sprite_width = forest.getWidth();
 		int sprite_height = forest.getHeight();
 		// Affine2 scale = new Affine2().preScale(0.1f, 0.1f);
 		// Affine2 scale = new Affine2();
-		double scale = 0.1;
+		double scale = zoom;
 		for (int x = 0; x < tiles.length; x++){
 			for (int y = 0; y < tiles[x].length; y++){
 				/*
@@ -114,7 +175,7 @@ class World{
 		}
 
 		CatmullRomSpline<Vector2> catmull = new CatmullRomSpline<>(points, true);
-		Vector2[] spline = new Vector2[200];
+		Vector2[] spline = new Vector2[(int)Math.sqrt(width * height * 2)];
 		for (int i = 0; i < spline.length; i++){
 			spline[i] = new Vector2();
 			catmull.valueAt(spline[i], ((float)i) / ((float) spline.length - 1));
@@ -261,7 +322,7 @@ class World{
 	public static World generate(int width, int height){
 		Tile[][] tiles = new Tile[width][height];
 		initializeTiles(tiles);
-		int radius = 10;
+		int radius = (int) Math.sqrt((width + height) / 2);
 		// int masses = 12;
 		int masses = (int) Math.sqrt(width + height);
 		for (int i = 0; i < masses; i++){
@@ -269,7 +330,10 @@ class World{
 			int y = randomInteger(0, height);
 			applyLand2(tiles, x, y, radius);
 		}
-		int curves = 5;
+		int curves = (int)(width * height / 1e4);
+		if (curves < 0){
+			curves = 1;
+		}
 		for (int i = 0; i < curves; i++){
 			applyLand(tiles);
 		}
