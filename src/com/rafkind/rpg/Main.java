@@ -4,6 +4,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.CatmullRomSpline;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
@@ -22,7 +23,7 @@ public class Main extends ApplicationAdapter {
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
-		world = World.generate(100, 100);
+		world = World.generate(200, 200);
 	}
 
 	@Override
@@ -63,7 +64,7 @@ class World{
 		int sprite_height = forest.getHeight();
 		// Affine2 scale = new Affine2().preScale(0.1f, 0.1f);
 		// Affine2 scale = new Affine2();
-		double scale = 0.2;
+		double scale = 0.1;
 		for (int x = 0; x < tiles.length; x++){
 			for (int y = 0; y < tiles[x].length; y++){
 				/*
@@ -94,17 +95,16 @@ class World{
 	}
 
 	/* Set a blotch of tiles to be land */
-	/*
-	private static void applyLand2(Tile[][] tiles, int x, int y, int diameter){
-		for (int cx = x - diameter / 2; cx < x + diameter / 2; cx++){
-			for (int cy = y - diameter / 2; cy < y + diameter / 2; cy++){
-				if (cx >= 0 && cx < tiles.length && cy >= 0 && cy < tiles[cx].length){
+	private static void applyLand2(Tile[][] tiles, int x, int y, int radius){
+		Circle circle = new Circle(x, y, radius);
+		for (int cx = x - radius; cx < x + radius; cx++){
+			for (int cy = y - radius; cy < y + radius; cy++){
+				if (circle.contains(cx, cy) && cx >= 0 && cx < tiles.length && cy >= 0 && cy < tiles[cx].length){
 					tiles[cx][cy] = new Tile(1);
 				}
 			}
 		}
 	}
-	*/
 
 	/* Generates a spline with random control points */
 	private static Vector2[] makeSpline(int width, int height){
@@ -113,8 +113,8 @@ class World{
 			points[i] = new Vector2(randomInteger(0, width), randomInteger(0, height));
 		}
 
-		CatmullRomSpline<Vector2> catmull = new CatmullRomSpline<>(points, false);
-		Vector2[] spline = new Vector2[50];
+		CatmullRomSpline<Vector2> catmull = new CatmullRomSpline<>(points, true);
+		Vector2[] spline = new Vector2[200];
 		for (int i = 0; i < spline.length; i++){
 			spline[i] = new Vector2();
 			catmull.valueAt(spline[i], ((float)i) / ((float) spline.length - 1));
@@ -124,7 +124,7 @@ class World{
 	}
 
 	private static void blotch(Tile[][] tiles, int x, int y){
-		int size = 1;
+		int size = 2;
 		for (int ax = x - size; ax < x + size; ax++){
 			for (int ay = y - size; ay < y + size; ay++){
 				if (ax >= 0 && ax < tiles.length && ay >= 0 && ay < tiles[ax].length){
@@ -261,14 +261,20 @@ class World{
 	public static World generate(int width, int height){
 		Tile[][] tiles = new Tile[width][height];
 		initializeTiles(tiles);
-		int masses = 10;
+		int radius = 10;
+		// int masses = 12;
+		int masses = (int) Math.sqrt(width + height);
 		for (int i = 0; i < masses; i++){
 			int x = randomInteger(0, width);
 			int y = randomInteger(0, height);
+			applyLand2(tiles, x, y, radius);
+		}
+		int curves = 5;
+		for (int i = 0; i < curves; i++){
 			applyLand(tiles);
 		}
 
-		for (int i = 0; i < 3; i++){
+		for (int i = 0; i < 5; i++){
 			tiles = averageLand(tiles);
 		}
 
