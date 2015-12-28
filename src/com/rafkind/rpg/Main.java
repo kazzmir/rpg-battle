@@ -2,20 +2,25 @@ package com.rafkind.rpg;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 
 public class Main extends ApplicationAdapter {
 	SpriteBatch batch;
-	Texture forest;
+	World world;
+
+	public Main(){
+	}
 
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
-		forest = new Texture("data/land/forest.png");
+		world = World.generate(100, 100);
 	}
 
 	@Override
@@ -23,14 +28,16 @@ public class Main extends ApplicationAdapter {
 		Gdx.gl.glClearColor(1, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		batch.begin();
-		batch.draw(forest, 0, 0);
-		batch.draw(forest, 0, 100);
+		world.render(batch);
 		batch.end();
 	}
 
 	public static class DesktopLauncher {
 		public static void main(String... args) {
 			LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
+			config.title = "RPG Battle";
+			config.width = 1024;
+			config.height = 768;
 			new LwjglApplication(new Main(), config);
 		}
 	}
@@ -39,9 +46,50 @@ public class Main extends ApplicationAdapter {
 class World{
 	public World(Tile[][] tiles){
 		this.tiles = tiles;
+		forest = new Texture("data/land/forest.png");
+		ocean = new Texture("data/land/ocean.png");
+		beach = new Texture("data/land/beach.png");
 	}
 
+	private Texture forest;
+	private Texture ocean;
+	private Texture beach;
 	private Tile[][] tiles;
+
+	public void render(SpriteBatch batch){
+		int sprite_width = forest.getWidth();
+		int sprite_height = forest.getHeight();
+		// Affine2 scale = new Affine2().preScale(0.1f, 0.1f);
+		// Affine2 scale = new Affine2();
+		double scale = 0.2;
+		for (int x = 0; x < tiles.length; x++){
+			for (int y = 0; y < tiles[x].length; y++){
+				/*
+				int position_x = sprite_width * x + 2 * x;
+				int position_y = sprite_height * y + 2 * y;
+				*/
+				int position_x = sprite_width * x;
+				int position_y = sprite_height * y;
+
+				Tile tile = tiles[x][y];
+				switch (tile.getType()){
+					case Forest: {
+						// batch.draw(new TextureRegion(forest), position_x, position_y, scale);
+						batch.draw(forest, (float)(position_x * scale), (float)(position_y * scale), (float)(forest.getWidth() * scale), (float)(forest.getHeight() * scale));
+						break;
+					}
+					case Beach: {
+						batch.draw(beach, (float)(position_x * scale), (float)(position_y * scale), (float)(forest.getWidth() * scale), (float)(forest.getHeight() * scale));
+						break;
+					}
+					case Ocean: {
+						batch.draw(ocean, (float)(position_x * scale), (float)(position_y * scale), (float)(ocean.getWidth() * scale), (float)(ocean.getHeight() * scale));
+						break;
+					}
+				}
+			}
+		}
+	}
 
 	/* Set a blotch of tiles to be land */
 	private static void applyLand(Tile[][] tiles, int x, int y, int diameter){
@@ -163,21 +211,28 @@ class World{
 		}
 	}
 
+	public static World generate2(int width, int height){
+		Tile[][] tiles = new Tile[width][height];
+		initializeTiles(tiles);
+		tiles[6][6] = new Tile(1);
+		return new World(tiles);
+	}
+
 	public static World generate(int width, int height){
 		Tile[][] tiles = new Tile[width][height];
 		initializeTiles(tiles);
-		int diameter = 20;
-		int masses = 5;
+		int diameter = 25;
+		int masses = 10;
 		if (width < diameter || height < diameter){
 			throw new RuntimeException("Width and height must be larger than " + diameter + " but given " + width + ", " + height);
 		}
 		for (int i = 0; i < masses; i++){
-			int x = randomInteger(diameter, width - diameter);
-			int y = randomInteger(diameter, height - diameter);
-			applyLand(tiles, x, y, diameter);
+			int x = randomInteger(0, width);
+			int y = randomInteger(0, height);
+			applyLand(tiles, x, y, randomInteger(5, 25));
 		}
 
-		for (int i = 0; i < 5; i++){
+		for (int i = 0; i < 7; i++){
 			tiles = averageLand(tiles);
 		}
 
@@ -194,12 +249,18 @@ enum TileType{
 class Tile{
 	public Tile(double value){
 		this.value = value;
-		if (value >= 0.5){
+		if (value >= 0.4){
 			type = TileType.Forest;
+		} else if (value >= 0.2){
+			type = TileType.Beach;
 		} else {
 			type = TileType.Ocean;
 		}
 		
+	}
+
+	public TileType getType(){
+		return type;
 	}
 
 	private double value;
