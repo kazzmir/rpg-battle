@@ -3,6 +3,8 @@ package com.rafkind.rpg;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Affine2;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.CatmullRomSpline;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -92,13 +94,51 @@ class World{
 	}
 
 	/* Set a blotch of tiles to be land */
-	private static void applyLand(Tile[][] tiles, int x, int y, int diameter){
+	/*
+	private static void applyLand2(Tile[][] tiles, int x, int y, int diameter){
 		for (int cx = x - diameter / 2; cx < x + diameter / 2; cx++){
 			for (int cy = y - diameter / 2; cy < y + diameter / 2; cy++){
 				if (cx >= 0 && cx < tiles.length && cy >= 0 && cy < tiles[cx].length){
 					tiles[cx][cy] = new Tile(1);
 				}
 			}
+		}
+	}
+	*/
+
+	/* Generates a spline with random control points */
+	private static Vector2[] makeSpline(int width, int height){
+		Vector2[] points = new Vector2[6];
+		for (int i = 0; i < points.length; i++){
+			points[i] = new Vector2(randomInteger(0, width), randomInteger(0, height));
+		}
+
+		CatmullRomSpline<Vector2> catmull = new CatmullRomSpline<>(points, false);
+		Vector2[] spline = new Vector2[50];
+		for (int i = 0; i < spline.length; i++){
+			spline[i] = new Vector2();
+			catmull.valueAt(spline[i], ((float)i) / ((float) spline.length - 1));
+		}
+
+		return spline;
+	}
+
+	private static void blotch(Tile[][] tiles, int x, int y){
+		int size = 1;
+		for (int ax = x - size; ax < x + size; ax++){
+			for (int ay = y - size; ay < y + size; ay++){
+				if (ax >= 0 && ax < tiles.length && ay >= 0 && ay < tiles[ax].length){
+					tiles[ax][ay] = new Tile(1);
+				}
+			}
+		}
+	}
+
+	private static void applyLand(Tile[][] tiles){
+		Vector2[] spline = makeSpline(tiles.length, tiles[0].length);
+
+		for (Vector2 point: spline){
+			blotch(tiles, (int) point.x, (int) point.y);
 		}
 	}
 
@@ -221,18 +261,14 @@ class World{
 	public static World generate(int width, int height){
 		Tile[][] tiles = new Tile[width][height];
 		initializeTiles(tiles);
-		int diameter = 25;
 		int masses = 10;
-		if (width < diameter || height < diameter){
-			throw new RuntimeException("Width and height must be larger than " + diameter + " but given " + width + ", " + height);
-		}
 		for (int i = 0; i < masses; i++){
 			int x = randomInteger(0, width);
 			int y = randomInteger(0, height);
-			applyLand(tiles, x, y, randomInteger(5, 25));
+			applyLand(tiles);
 		}
 
-		for (int i = 0; i < 7; i++){
+		for (int i = 0; i < 3; i++){
 			tiles = averageLand(tiles);
 		}
 
