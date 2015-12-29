@@ -7,8 +7,11 @@ import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.CatmullRomSpline;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
@@ -17,6 +20,7 @@ import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 public class Main extends ApplicationAdapter implements InputProcessor {
 	SpriteBatch batch;
 	World world;
+	Battle battle;
 
 	public Main(){
 	}
@@ -25,6 +29,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 	public void create () {
 		batch = new SpriteBatch();
 		world = World.generate(300, 300);
+		battle = new Battle();
 
 		Gdx.input.setInputProcessor(this);
 	}
@@ -76,11 +81,15 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
 	@Override
 	public void render () {
-		Gdx.gl.glClearColor(1, 0, 0, 1);
+		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		/*
 		batch.begin();
 		world.render(batch);
 		batch.end();
+		*/
+
+		battle.render();
 	}
 
 	public static class DesktopLauncher {
@@ -91,6 +100,61 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 			config.height = 768;
 			new LwjglApplication(new Main(), config);
 		}
+	}
+}
+
+class Battle{
+	/* converts a relative coordinate to absolute */
+	private float relativeX(float relative){
+		return Gdx.graphics.getWidth() * relative;
+	}
+
+	private float relativeX(double relative){
+		return relativeX((float) relative);
+	}
+
+	private float relativeY(float relative){
+		return Gdx.graphics.getHeight() * relative;
+	}
+	
+	private float relativeY(double relative){
+		return relativeY((float) relative);
+	}
+
+	private void box(ShapeRenderer renderer, float x1, float y1, float width, float height, float inner, Color color){
+		renderer.begin(ShapeRenderer.ShapeType.Filled);
+		renderer.setColor(color);
+
+		/* top */
+		renderer.rect(x1, y1, width, inner);
+		/* left */
+		renderer.rect(x1, y1, inner, height);
+		/* right */
+		renderer.rect(x1 + width - inner, y1, inner, height);
+		/* bottom */
+		renderer.rect(x1, y1  + height - inner, width, inner);
+
+		renderer.end();
+	}
+
+	public void render(){
+		Gdx.gl.glClearColor(0, 0, 0, 1);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		OrthographicCamera camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		camera.setToOrtho(true, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		camera.update();
+
+		ShapeRenderer shapes = new ShapeRenderer();
+		shapes.setProjectionMatrix(camera.combined);
+
+		/* Entire screen */
+		box(shapes, relativeX(0), relativeY(0), relativeX(1), relativeY(1), 4, new Color(1, 1, 1, 1));
+
+		/* Enemy box */
+		box(shapes, relativeX(0), relativeY(0), relativeX(0.6), relativeY(0.6), 4, new Color(1, 1, 1, 1));
+
+		/* Player box */
+		box(shapes, relativeX(0.6) - 4, relativeY(0), relativeX(1 - 0.6) + 4, relativeY(0.6), 4, new Color(1, 1, 1, 1));
 	}
 }
 
