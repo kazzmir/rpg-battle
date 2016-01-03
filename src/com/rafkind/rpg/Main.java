@@ -107,12 +107,20 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 }
 
 interface Sprite{
+	public void render(ShapeRenderer renderer, float x, float y);
 }
 
-class Character implements Sprite {
+abstract class Character implements Sprite {
 }
 
 class GenericEnemy extends Character {
+	@Override
+	public void render(ShapeRenderer renderer, float x, float y){
+		renderer.begin(ShapeRenderer.ShapeType.Filled);
+		renderer.setColor(new Color(1, 0, 0, 1));
+		renderer.rect(x - 5, y - 5, 10, 10);
+		renderer.end();
+	}
 }
 
 class Team{
@@ -190,14 +198,11 @@ class Battle{
 
 	private void renderEnemy(ShapeRenderer renderer, Team team){
 		List<Vector2> positions = getPositions(team);
-		renderer.begin(ShapeRenderer.ShapeType.Filled);
 		for (int i = 0; i < team.size(); i++){
 			Vector2 position = positions.get(i);
 			Sprite sprite = team.getSprite(i);
-			renderer.setColor(1, 0, 0, 1);
-			renderer.rect(relativeX(position.x) - 5, relativeY(position.y) - 5, 10, 10);
+			sprite.render(renderer, relativeX(position.x), relativeY(position.y));
 		}
-		renderer.end();
 	}
 
 	private void renderPlayer(Team team){
