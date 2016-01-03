@@ -123,6 +123,16 @@ class GenericEnemy extends Character {
 	}
 }
 
+class Player extends Character {
+	@Override
+	public void render(ShapeRenderer renderer, float x, float y){
+		renderer.begin(ShapeRenderer.ShapeType.Filled);
+		renderer.setColor(new Color(0, 1, 0, 1));
+		renderer.rect(x - 5, y - 5, 10, 10);
+		renderer.end();
+	}
+}
+
 class Team{
 	private List<Character> characters = new ArrayList<>();
 
@@ -151,6 +161,11 @@ class Battle{
 		enemy.addCharacter(new GenericEnemy());
 		enemy.addCharacter(new GenericEnemy());
 		enemy.addCharacter(new GenericEnemy());
+
+		player.addCharacter(new Player());
+		player.addCharacter(new Player());
+		player.addCharacter(new Player());
+		player.addCharacter(new Player());
 	}
 
 	/* converts a relative coordinate to absolute */
@@ -186,7 +201,7 @@ class Battle{
 		renderer.end();
 	}
 
-	private List<Vector2> getPositions(Team team){
+	private List<Vector2> getEnemyPositions(Team team){
 		List<Vector2> out = new ArrayList<>();
 
 		out.add(new Vector2(0.2f, 0.1f));
@@ -196,8 +211,19 @@ class Battle{
 		return out;
 	}
 
+	private List<Vector2> getPlayerPositions(Team team){
+		List<Vector2> out = new ArrayList<>();
+
+		out.add(new Vector2(0.8f, 0.1f));
+		out.add(new Vector2(0.8f, 0.2f));
+		out.add(new Vector2(0.8f, 0.3f));
+		out.add(new Vector2(0.8f, 0.4f));
+
+		return out;
+	}
+
 	private void renderEnemy(ShapeRenderer renderer, Team team){
-		List<Vector2> positions = getPositions(team);
+		List<Vector2> positions = getEnemyPositions(team);
 		for (int i = 0; i < team.size(); i++){
 			Vector2 position = positions.get(i);
 			Sprite sprite = team.getSprite(i);
@@ -205,7 +231,13 @@ class Battle{
 		}
 	}
 
-	private void renderPlayer(Team team){
+	private void renderPlayer(ShapeRenderer renderer, Team team){
+		List<Vector2> positions = getPlayerPositions(team);
+		for (int i = 0; i < team.size(); i++){
+			Vector2 position = positions.get(i);
+			Sprite sprite = team.getSprite(i);
+			sprite.render(renderer, relativeX(position.x), relativeY(position.y));
+		}
 	}
 
 	public void render(){
@@ -229,7 +261,7 @@ class Battle{
 		/* Player box */
 		box(shapes, relativeX(0.6) - 4, relativeY(0), relativeX(1 - 0.6) + 4, relativeY(0.6), 4, new Color(1, 1, 1, 1));
 
-		renderPlayer(player);
+		renderPlayer(shapes, player);
 	}
 }
 
