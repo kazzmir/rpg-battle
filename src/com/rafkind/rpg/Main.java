@@ -17,6 +17,9 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 
+import java.util.List;
+import java.util.ArrayList;
+
 public class Main extends ApplicationAdapter implements InputProcessor {
 	SpriteBatch batch;
 	World world;
@@ -103,7 +106,45 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 	}
 }
 
+interface Sprite{
+}
+
+class Character implements Sprite {
+}
+
+class GenericEnemy extends Character {
+}
+
+class Team{
+	private List<Character> characters = new ArrayList<>();
+
+	public void addCharacter(Character character){
+		characters.add(character);
+	}
+
+	public int size(){
+		return characters.size();
+	}
+
+	public Sprite getSprite(int index){
+		return characters.get(index);
+	}
+}
+
 class Battle{
+
+	private Team enemy;
+	private Team player;
+
+	public Battle(){
+		enemy = new Team();
+		player = new Team();
+
+		enemy.addCharacter(new GenericEnemy());
+		enemy.addCharacter(new GenericEnemy());
+		enemy.addCharacter(new GenericEnemy());
+	}
+
 	/* converts a relative coordinate to absolute */
 	private float relativeX(float relative){
 		return Gdx.graphics.getWidth() * relative;
@@ -137,6 +178,31 @@ class Battle{
 		renderer.end();
 	}
 
+	private List<Vector2> getPositions(Team team){
+		List<Vector2> out = new ArrayList<>();
+
+		out.add(new Vector2(0.2f, 0.1f));
+		out.add(new Vector2(0.2f, 0.3f));
+		out.add(new Vector2(0.2f, 0.5f));
+
+		return out;
+	}
+
+	private void renderEnemy(ShapeRenderer renderer, Team team){
+		List<Vector2> positions = getPositions(team);
+		renderer.begin(ShapeRenderer.ShapeType.Filled);
+		for (int i = 0; i < team.size(); i++){
+			Vector2 position = positions.get(i);
+			Sprite sprite = team.getSprite(i);
+			renderer.setColor(1, 0, 0, 1);
+			renderer.rect(relativeX(position.x) - 5, relativeY(position.y) - 5, 10, 10);
+		}
+		renderer.end();
+	}
+
+	private void renderPlayer(Team team){
+	}
+
 	public void render(){
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -153,8 +219,12 @@ class Battle{
 		/* Enemy box */
 		box(shapes, relativeX(0), relativeY(0), relativeX(0.6), relativeY(0.6), 4, new Color(1, 1, 1, 1));
 
+		renderEnemy(shapes, enemy);
+
 		/* Player box */
 		box(shapes, relativeX(0.6) - 4, relativeY(0), relativeX(1 - 0.6) + 4, relativeY(0.6), 4, new Color(1, 1, 1, 1));
+
+		renderPlayer(player);
 	}
 }
 
